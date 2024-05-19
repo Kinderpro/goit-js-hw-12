@@ -3,14 +3,9 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 import { creatMarkup } from './js/render-functions.js';
-// import { searchServiceImg } from './js/pixabay-api.js';
-import axios from 'axios';
+import { searchServiceImg, per_page } from './js/pixabay-api.js';
 
-let page;
-let per_page = 15;
-let totalHits = 1;
-
-const key = '42801696-74e6805803c5f99662f25fde0';
+let page = 1;
 let elem = document.querySelector('ul');
 const refs = {
   formEl: document.querySelector('.form-search'),
@@ -25,14 +20,14 @@ async function onSearchImg(evt) {
   evt.preventDefault();
   page = 1;
   refs.readMore.classList.add('loader-none');
-  const nameSearch = evt.target[0].value;
+  const nameSearch = evt.target[0].value.trim();
   localStorage.setItem('nameImg', JSON.stringify(nameSearch));
   const nameImgGet = localStorage.getItem('nameImg');
   const imgSear = JSON.parse(nameImgGet);
   refs.loader.classList.remove('loader-none');
 
   refs.gallery.innerHTML = '';
-  await searchServiceImg(imgSear)
+  await searchServiceImg(imgSear, page)
     .then(data => {
       if (creatMarkup(data.hits) == []) {
         refs.loader.classList.add('loader-none');
@@ -62,12 +57,11 @@ async function onSearchImg(evt) {
 
 async function onClickReadMore() {
   const nameInput = JSON.parse(localStorage.getItem('nameImg'));
-  //   const nameInput = refs.formEl.elements[0].value;
   refs.loader.classList.remove('loader-none');
   refs.readMore.classList.add('loader-none');
   page += 1;
 
-  await searchServiceImg(nameInput)
+  await searchServiceImg(nameInput, page)
     .then(data => {
       refs.gallery.insertAdjacentHTML('beforeend', creatMarkup(data.hits));
       let rect = elem.getBoundingClientRect();
@@ -104,23 +98,3 @@ let lightbox = new SimpleLightbox('.gallery a', {
   swipeClose: true,
   close: true,
 });
-
-async function searchServiceImg(imgSear) {
-  const BASE_URL = 'https://pixabay.com/api/';
-  const params = new URLSearchParams({
-    key,
-    q: imgSear,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: true,
-    page: page,
-    per_page: per_page,
-  });
-
-  try {
-    const response = await axios.get(`${BASE_URL}?${params}`);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-  }
-}
