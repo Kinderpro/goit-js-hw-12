@@ -39,7 +39,7 @@ async function onSearchImg(evt) {
         position: 'topCenter',
       });
       refs.gallery.innerHTML = creatMarkup(data.hits);
-
+      lightbox.refresh(); 
       return;
     }
     if (creatMarkup(data.hits) == []) {
