@@ -39,7 +39,7 @@ async function onSearchImg(evt) {
         position: 'topCenter',
       });
       refs.gallery.innerHTML = creatMarkup(data.hits);
-      lightbox.refresh(); 
+      lightbox.refresh();
       return;
     }
     if (creatMarkup(data.hits) == []) {
@@ -73,8 +73,6 @@ async function onClickReadMore() {
   page += 1;
   try {
     const data = await searchServiceImg(nameInput, page);
-
-    refs.gallery.insertAdjacentHTML('beforeend', creatMarkup(data.hits));
     refs.gallery.insertAdjacentHTML('beforeend', creatMarkup(data.hits));
     let rect = elem.getBoundingClientRect();
     window.scrollBy({
