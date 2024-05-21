@@ -15,7 +15,7 @@ const refs = {
 };
 
 refs.formEl.addEventListener('submit', onSearchImg);
-
+per_page;
 async function onSearchImg(evt) {
   evt.preventDefault();
   page = 1;
@@ -27,32 +27,43 @@ async function onSearchImg(evt) {
   refs.loader.classList.remove('loader-none');
 
   refs.gallery.innerHTML = '';
-  await searchServiceImg(imgSear, page)
-    .then(data => {
-      if (creatMarkup(data.hits) == []) {
-        refs.loader.classList.add('loader-none');
-        refs.readMore.classList.add('loader-none');
-        iziToast.error({
-          title: 'Error',
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
-          position: 'topCenter',
-        });
-        this.reset();
-      } else {
-        refs.readMore.addEventListener('click', onClickReadMore);
-        refs.loader.classList.add('loader-none');
-        refs.readMore.classList.remove('loader-none');
-        refs.gallery.innerHTML = creatMarkup(data.hits);
-        lightbox.refresh();
+  try {
+    const data = await searchServiceImg(imgSear, page);
 
-        this.reset();
-      }
-    })
-    .catch(er => {
+    if (data.totalHits < per_page) {
+      refs.readMore.classList.add('loader-none');
       refs.loader.classList.add('loader-none');
-      console.log(er);
-    });
+      iziToast.info({
+        title: 'Info',
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topCenter',
+      });
+      refs.gallery.innerHTML = creatMarkup(data.hits);
+
+      return;
+    }
+    if (creatMarkup(data.hits) == []) {
+      refs.loader.classList.add('loader-none');
+      refs.readMore.classList.add('loader-none');
+      iziToast.error({
+        title: 'Error',
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
+        position: 'topCenter',
+      });
+      this.reset();
+    } else {
+      refs.readMore.addEventListener('click', onClickReadMore);
+      refs.loader.classList.add('loader-none');
+      refs.readMore.classList.remove('loader-none');
+      refs.gallery.innerHTML = creatMarkup(data.hits);
+      lightbox.refresh();
+
+      this.reset();
+    }
+  } catch (er) {
+    console.log(er);
+  }
 }
 
 async function onClickReadMore() {
@@ -60,32 +71,32 @@ async function onClickReadMore() {
   refs.loader.classList.remove('loader-none');
   refs.readMore.classList.add('loader-none');
   page += 1;
+  try {
+    const data = await searchServiceImg(nameInput, page);
 
-  await searchServiceImg(nameInput, page)
-    .then(data => {
-      refs.gallery.insertAdjacentHTML('beforeend', creatMarkup(data.hits));
-      let rect = elem.getBoundingClientRect();
-      window.scrollBy({
-        top: rect.bottom * 2,
-        left: rect.x * 2,
-        behavior: 'smooth',
-      });
-      refs.loader.classList.add('loader-none');
-      lightbox.refresh();
-      refs.readMore.classList.remove('loader-none');
-      const totalPage = Math.ceil(data.totalHits / per_page);
-      if (page >= totalPage) {
-        refs.readMore.classList.add('loader-none');
-        iziToast.info({
-          title: 'Info',
-          message: "We're sorry, but you've reached the end of search results.",
-          position: 'topCenter',
-        });
-      }
-    })
-    .catch(er => {
-      console.log(er);
+    refs.gallery.insertAdjacentHTML('beforeend', creatMarkup(data.hits));
+    refs.gallery.insertAdjacentHTML('beforeend', creatMarkup(data.hits));
+    let rect = elem.getBoundingClientRect();
+    window.scrollBy({
+      top: rect.bottom * 2,
+      left: rect.x * 2,
+      behavior: 'smooth',
     });
+    refs.loader.classList.add('loader-none');
+    lightbox.refresh();
+    refs.readMore.classList.remove('loader-none');
+    const totalPage = Math.ceil(data.totalHits / per_page);
+    if (page >= totalPage) {
+      refs.readMore.classList.add('loader-none');
+      iziToast.info({
+        title: 'Info',
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topCenter',
+      });
+    }
+  } catch (er) {
+    console.log(er);
+  }
 }
 
 let lightbox = new SimpleLightbox('.gallery a', {
